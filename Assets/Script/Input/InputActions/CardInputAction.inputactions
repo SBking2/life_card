@@ -1,0 +1,54 @@
+{
+    "name": "CardInputAction",
+    "maps": [
+        {
+            "name": "Battle",
+            "id": "a7d6b491-7afe-47a9-baf3-63b8c9084202",
+            "actions": [
+                {
+                    "name": "Test",
+                    "type": "Button",
+                    "id": "a99021ad-9749-4003-93c4-7157c1a5ef5c",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "DisCard",
+                    "type": "Button",
+                    "id": "072e95d7-0ee2-4f23-9096-f760e382343d",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "9317191a-220b-4914-be38-7b200b654c5f",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Test",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "aae28012-8bbc-4ad4-8b74-070f2948d319",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "DisCard",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

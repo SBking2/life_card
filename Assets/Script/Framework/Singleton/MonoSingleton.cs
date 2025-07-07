@@ -8,7 +8,7 @@ namespace QF
         {
             get
             {
-                if(Instance == null)
+                if(m_Instance == null)
                 {
                     GameObject obj = new GameObject(typeof(T).Name);
                     DontDestroyOnLoad(obj);
