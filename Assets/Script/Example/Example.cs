@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class Example : MonoBehaviour
 {
-    public GameObject cardObjRes;
     private void OnEnable()
     {
         LC.InputMgr.Instance.onSpaceAction += AddCard;
@@ -22,12 +21,11 @@ public class Example : MonoBehaviour
     /// </summary>
     private void AddCard()
     {
-        GameObject obj = GameObject.Instantiate(cardObjRes);
-        HandMgr.Instance.AddCard(obj.GetComponent<CardView>());
+        CardMgr.Instance.DrawCard(4);
     }
 
     private void RemoveCard()
     {
-        HandMgr.Instance.RemoveCard();
+        CardMgr.Instance.DisCardAllCard();
     }
 }

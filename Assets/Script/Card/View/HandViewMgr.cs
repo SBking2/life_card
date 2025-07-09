@@ -9,7 +9,7 @@ using UnityEngine.Splines;
 /// <summary>
 /// HandView管理手牌的位置,直接管理CardObj
 /// </summary>
-public class HandMgr : Singleton<HandMgr>
+public class HandViewMgr : Singleton<HandViewMgr>
 {
     private SplineContainer m_Spline;
     private Transform m_DiscardTrans;
@@ -18,8 +18,9 @@ public class HandMgr : Singleton<HandMgr>
     private float duration = 0.15f;
     private Vector3 m_FatherOffset;
     private List<CardView> m_HandCards = new List<CardView>();
+    private CardViewFactory m_CardViewFactory = new CardViewFactory();
 
-    public HandMgr()
+    public HandViewMgr()
     {
         m_DiscardTrans = GameObject.Find("DiscardPoint").transform;
         m_DrawPipleTrans = GameObject.Find("DrawPiplePoint").transform;
@@ -33,8 +34,10 @@ public class HandMgr : Singleton<HandMgr>
     /// 在DrawPiplePoint生成一个CardView，然后Update
     /// </summary>
     /// <param name="cardView"></param>
-    public void AddCard(CardView cardView)
+    public void AddCard(GameObject cardObj)
     {
+        CardView cardView = m_CardViewFactory.CreateCardView(cardObj);      //创建CardView
+
         m_HandCards.Add(cardView);
 
         cardView.transform.position = m_DrawPipleTrans.position;
@@ -50,11 +53,25 @@ public class HandMgr : Singleton<HandMgr>
     /// 把CardView移除，并移动到DiscardPoint
     /// </summary>
     /// <param name="cardView"></param>
-    public void RemoveCard()
+    public void RemoveCard(GameObject cardObj)
     {
-        GameObject obj = m_HandCards[m_HandCards.Count - 1].gameObject;
+        if (m_HandCards.Count < 1) return;
+
+        GameObject obj = null;
+        CardView cardView = null;
+        foreach(var view in m_HandCards)
+        {
+            if (view.cardObj == cardObj)
+            {
+                obj = view.gameObject;
+                cardView = view;
+            }
+        }
+
+        if(obj == null) return;
+
+        m_HandCards.Remove(cardView);   //从手牌中移除这个cardview
         obj.transform.DOMove(m_DiscardTrans.position, duration);
-        m_HandCards.Remove(m_HandCards[m_HandCards.Count - 1]);
         obj.transform.DOScale(0.0f, duration).OnComplete(() =>
         {
             GameObject.Destroy(obj);

@@ -2,8 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public struct CardModel
+public class CardModelComponent : MonoBehaviour
 {
-    public string id;
-    public string card_name;
+    public CardModel cardModel;
 }

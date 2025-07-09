@@ -10,7 +10,7 @@ namespace LC
     /// <summary>
     /// Action管理器，控制演出
     /// </summary>
-    public class ActionMgr : MonoSingleton<ActionMgr>
+    public class ActionMgr : AutoMonoSingleton<ActionMgr>
     {
         private Dictionary<Type, Func<GameAction, IEnumerator>> m_PerformersDic = new Dictionary<Type, Func<GameAction, IEnumerator>>();
         public bool IsPerforming { get; private set; }
