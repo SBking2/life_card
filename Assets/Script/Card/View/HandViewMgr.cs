@@ -20,6 +20,14 @@ public class HandViewMgr : Singleton<HandViewMgr>
     private List<CardView> m_HandCards = new List<CardView>();
     private CardViewFactory m_CardViewFactory = new CardViewFactory();
 
+    public int HandCardCount
+    {
+        get
+        {
+            return m_HandCards.Count;
+        }
+    }
+
     public HandViewMgr()
     {
         m_DiscardTrans = GameObject.Find("DiscardPoint").transform;
@@ -41,10 +49,8 @@ public class HandViewMgr : Singleton<HandViewMgr>
         m_HandCards.Add(cardView);
 
         cardView.transform.position = m_DrawPipleTrans.position;
-        float scale = cardView.transform.localScale.x;
         cardView.transform.localScale = Vector3.zero;
-
-        cardView.transform.DOScale(scale, duration);
+        cardView.transform.DOScale(1.0f, duration);
 
         UpdateCardPosition();
     }
@@ -94,11 +100,7 @@ public class HandViewMgr : Singleton<HandViewMgr>
             Vector3 tangent = m_Spline.Spline.EvaluateTangent(cardT);   //ÇúÏßÇÐÏß
             Quaternion quat = Quaternion.LookRotation(Vector3.Cross(tangent, up), up);
 
-            SortingGroup sortGroup = m_HandCards[i].GetComponent<SortingGroup>();
-            sortGroup.sortingOrder = i;
-
-            m_HandCards[i].transform.DOMove(pos, duration);
-            m_HandCards[i].transform.DORotateQuaternion(quat, duration);
+            m_HandCards[i].SetTrans(pos, quat, i);
         }
     }
 }
