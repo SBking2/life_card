@@ -15,6 +15,9 @@ public class HandViewMgr : Singleton<HandViewMgr>
     private Transform m_DiscardTrans;
     private Transform m_DrawPipleTrans;
 
+    private float m_MinCardSpace = 0.05f;
+    private float m_MaxCardSpace = 0.2f;
+
     private float duration = 0.15f;
     private Vector3 m_FatherOffset;
     private List<CardView> m_HandCards = new List<CardView>();
@@ -36,13 +39,16 @@ public class HandViewMgr : Singleton<HandViewMgr>
         Transform splieTrans = GameObject.Find("HandView").transform.Find("Spline");
         m_Spline = splieTrans.GetComponent<SplineContainer>();
         m_FatherOffset = splieTrans.localPosition;
+
+        CardMgr.Instance.onDrawCard += AddCard;
+        CardMgr.Instance.onDiscardCard += RemoveCard;
     }
 
     /// <summary>
     /// 在DrawPiplePoint生成一个CardView，然后Update
     /// </summary>
     /// <param name="cardView"></param>
-    public void AddCard(GameObject cardObj)
+    private void AddCard(GameObject cardObj)
     {
         CardView cardView = m_CardViewFactory.CreateCardView(cardObj);      //创建CardView
 
@@ -59,7 +65,7 @@ public class HandViewMgr : Singleton<HandViewMgr>
     /// 把CardView移除，并移动到DiscardPoint
     /// </summary>
     /// <param name="cardView"></param>
-    public void RemoveCard(GameObject cardObj)
+    private void RemoveCard(GameObject cardObj)
     {
         if (m_HandCards.Count < 1) return;
 
@@ -89,7 +95,8 @@ public class HandViewMgr : Singleton<HandViewMgr>
     {
         if (m_HandCards.Count == 0) return;
         float cardSpacing = 1f / m_HandCards.Count;
-        float firstPos = cardSpacing / 2;
+        cardSpacing = Mathf.Clamp(cardSpacing, m_MinCardSpace, m_MaxCardSpace);     //限制卡牌间距
+        float firstPos = 0.5f - (m_HandCards.Count - 1) * cardSpacing / 2;
 
         for(int i = 0; i < m_HandCards.Count; i++)
         {

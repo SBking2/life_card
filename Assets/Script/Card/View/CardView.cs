@@ -44,19 +44,19 @@ public class CardView : MonoBehaviour
         transform.DORotateQuaternion(quat, m_AnimDuration);
     }
 
-    private void OnMouseEnter()
+    public void OnHorvered()
     {
         Vector3 pos = m_OriginalPos;
-        pos.y = -1.5f;
+        pos.y = -2.0f;
         Quaternion rot = Quaternion.LookRotation(Vector3.forward, Vector3.up);
 
         transform.DOMove(pos, m_AnimDuration);
         transform.DORotateQuaternion(rot, m_AnimDuration);
-        transform.DOScale(1.3f, m_AnimDuration);
+        transform.DOScale(1.2f, m_AnimDuration);
         m_SortGroup.sortingOrder = HandViewMgr.Instance.HandCardCount;
     }
 
-    private void OnMouseExit()
+    public void OnUnHorvered()
     {
         transform.DOMove(m_OriginalPos, m_AnimDuration);
         transform.DORotateQuaternion(m_OriginalQuat, m_AnimDuration);

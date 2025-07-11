@@ -1,4 +1,5 @@
 using QF;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
@@ -11,8 +12,11 @@ public class CardMgr : MonoSingleton<CardMgr>
 {
     public List<string> m_InitCards = new List<string>();
 
-    [SerializeField] private List<GameObject> m_DrawPipleCards = new List<GameObject>();
-    [SerializeField] private List<GameObject> m_DiscardCards = new List<GameObject>();
+    public Action<GameObject> onDrawCard;
+    public Action<GameObject> onDiscardCard;
+
+    [SerializeField] public List<GameObject> m_DrawPipleCards = new List<GameObject>();
+    [SerializeField] public List<GameObject> m_DiscardCards = new List<GameObject>();
     [SerializeField] private List<GameObject> m_HandCards = new List<GameObject>();
 
     private bool m_IsActioning = false;
@@ -53,12 +57,12 @@ public class CardMgr : MonoSingleton<CardMgr>
             {
                 Discard2Drawpiple();    //将所有弃牌堆放入抽牌堆中
             }
+            onDrawCard?.Invoke(m_DrawPipleCards[0]);
             m_HandCards.Add(m_DrawPipleCards[0]);
-            HandViewMgr.Instance.AddCard(m_DrawPipleCards[0]);
             m_DrawPipleCards.RemoveAt(0);
             yield return new WaitForSeconds(0.2f);
         }
-        m_IsActioning= false;
+        m_IsActioning = false;
     }
 
     /// <summary>
@@ -68,7 +72,7 @@ public class CardMgr : MonoSingleton<CardMgr>
     public void DiscardCard(GameObject cardObj)
     {
         m_HandCards.Remove(cardObj);
-        HandViewMgr.Instance.RemoveCard(cardObj);
+        onDiscardCard?.Invoke(cardObj);
         m_DiscardCards.Add(cardObj);
     }
 
@@ -112,7 +116,7 @@ public class CardMgr : MonoSingleton<CardMgr>
     {
         for (int i = 0; i < m_DrawPipleCards.Count - 1; i++)
         {
-            int randomIndex = Random.Range(i + 1, m_DrawPipleCards.Count - 1);
+            int randomIndex = UnityEngine.Random.Range(i + 1, m_DrawPipleCards.Count - 1);
             GameObject obj = m_DrawPipleCards[randomIndex];
             m_DrawPipleCards[randomIndex] = m_DrawPipleCards[i];
             m_DrawPipleCards[i] = obj;
