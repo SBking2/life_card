@@ -47,6 +47,10 @@ public class CardObjFactory : ICreateObject
         UnitState state = obj.GetComponent<UnitState>();
         state.Init(property, resource);
 
+        //更新CardView
+        CardView cardView = obj.GetComponentInChildren<CardView>(true);
+        cardView.UpdateView(obj);
+
         return obj;
     }
 }

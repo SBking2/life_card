@@ -44,6 +44,15 @@ public partial class @CardInputAction: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Exit"",
+                    ""type"": ""Button"",
+                    ""id"": ""96469273-2804-4385-b06b-3062984f5484"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -68,6 +77,17 @@ public partial class @CardInputAction: IInputActionCollection2, IDisposable
                     ""action"": ""DisCard"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c808a6c6-eb9d-44e9-ba5c-d7e3290a15e5"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Exit"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -78,6 +98,7 @@ public partial class @CardInputAction: IInputActionCollection2, IDisposable
         m_Battle = asset.FindActionMap("Battle", throwIfNotFound: true);
         m_Battle_Test = m_Battle.FindAction("Test", throwIfNotFound: true);
         m_Battle_DisCard = m_Battle.FindAction("DisCard", throwIfNotFound: true);
+        m_Battle_Exit = m_Battle.FindAction("Exit", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -141,12 +162,14 @@ public partial class @CardInputAction: IInputActionCollection2, IDisposable
     private List<IBattleActions> m_BattleActionsCallbackInterfaces = new List<IBattleActions>();
     private readonly InputAction m_Battle_Test;
     private readonly InputAction m_Battle_DisCard;
+    private readonly InputAction m_Battle_Exit;
     public struct BattleActions
     {
         private @CardInputAction m_Wrapper;
         public BattleActions(@CardInputAction wrapper) { m_Wrapper = wrapper; }
         public InputAction @Test => m_Wrapper.m_Battle_Test;
         public InputAction @DisCard => m_Wrapper.m_Battle_DisCard;
+        public InputAction @Exit => m_Wrapper.m_Battle_Exit;
         public InputActionMap Get() { return m_Wrapper.m_Battle; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -162,6 +185,9 @@ public partial class @CardInputAction: IInputActionCollection2, IDisposable
             @DisCard.started += instance.OnDisCard;
             @DisCard.performed += instance.OnDisCard;
             @DisCard.canceled += instance.OnDisCard;
+            @Exit.started += instance.OnExit;
+            @Exit.performed += instance.OnExit;
+            @Exit.canceled += instance.OnExit;
         }
 
         private void UnregisterCallbacks(IBattleActions instance)
@@ -172,6 +198,9 @@ public partial class @CardInputAction: IInputActionCollection2, IDisposable
             @DisCard.started -= instance.OnDisCard;
             @DisCard.performed -= instance.OnDisCard;
             @DisCard.canceled -= instance.OnDisCard;
+            @Exit.started -= instance.OnExit;
+            @Exit.performed -= instance.OnExit;
+            @Exit.canceled -= instance.OnExit;
         }
 
         public void RemoveCallbacks(IBattleActions instance)
@@ -193,5 +222,6 @@ public partial class @CardInputAction: IInputActionCollection2, IDisposable
     {
         void OnTest(InputAction.CallbackContext context);
         void OnDisCard(InputAction.CallbackContext context);
+        void OnExit(InputAction.CallbackContext context);
     }
 }

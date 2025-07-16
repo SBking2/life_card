@@ -12,14 +12,13 @@ public class CardMgr : MonoSingleton<CardMgr>
 {
     public List<string> m_InitCards = new List<string>();
 
-    public Action<GameObject> onDrawCard;
+    public Action<List<GameObject>> onDrawCard;
     public Action<GameObject> onDiscardCard;
 
     [SerializeField] public List<GameObject> m_DrawPipleCards = new List<GameObject>();
     [SerializeField] public List<GameObject> m_DiscardCards = new List<GameObject>();
     [SerializeField] private List<GameObject> m_HandCards = new List<GameObject>();
 
-    private bool m_IsActioning = false;
 
     public int CanDrawCardCount
     {
@@ -44,25 +43,21 @@ public class CardMgr : MonoSingleton<CardMgr>
 
     public void DrawCard(int count)
     {
-        if (m_IsActioning) return;
-        count = Mathf.Min(CanDrawCardCount, count);
-        StartCoroutine(DrawCardReally(count));
-    }
-    private IEnumerator DrawCardReally(int count)
-    {
-        m_IsActioning = true;
+        count = Mathf.Min(CanDrawCardCount, count);     //可以抽牌的数量
+
+        List<GameObject> drawCards = new List<GameObject>();
+
         for (int i = 0; i < count; i++)
         {
-            if(m_DrawPipleCards.Count < 1)
+            if (m_DrawPipleCards.Count < 1)
             {
                 Discard2Drawpiple();    //将所有弃牌堆放入抽牌堆中
             }
-            onDrawCard?.Invoke(m_DrawPipleCards[0]);
             m_HandCards.Add(m_DrawPipleCards[0]);
+            drawCards.Add(m_DrawPipleCards[0]);
             m_DrawPipleCards.RemoveAt(0);
-            yield return new WaitForSeconds(0.2f);
         }
-        m_IsActioning = false;
+        onDrawCard?.Invoke(drawCards);
     }
 
     /// <summary>
@@ -71,8 +66,8 @@ public class CardMgr : MonoSingleton<CardMgr>
     /// <param name="cardObj"></param>
     public void DiscardCard(GameObject cardObj)
     {
-        m_HandCards.Remove(cardObj);
         onDiscardCard?.Invoke(cardObj);
+        m_HandCards.Remove(cardObj);
         m_DiscardCards.Add(cardObj);
     }
 
@@ -81,19 +76,10 @@ public class CardMgr : MonoSingleton<CardMgr>
     /// </summary>
     public void DisCardAllCard()
     {
-        if (m_IsActioning) return;
-        StartCoroutine(DisCardAllCardReally());
-    }
-
-    public IEnumerator DisCardAllCardReally()
-    {
-        m_IsActioning = true;
         for (int i = m_HandCards.Count - 1; i >= 0; i--)
         {
             DiscardCard(m_HandCards[i]);
-            yield return new WaitForSeconds(0.1f);
         }
-        m_IsActioning = false;
     }
 
     /// <summary>

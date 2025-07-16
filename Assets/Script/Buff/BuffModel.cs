@@ -10,6 +10,27 @@ public delegate void OnKill(BuffObj buffObj, ref DamageInfo damageInfo, GameObje
 public delegate void OnBeKill(BuffObj buffObj, ref DamageInfo damageInfo, GameObject attacker);
 public struct BuffModel
 {
+    public BuffModel(string id, int priority, int max_stack, bool isPermanent, int durationTurn
+        , string onGetFun, string onRemoveFun, string onTurnStartFunc, string onTurnEndFunc
+        , string onHitFunc, string onBeHurtFunc, string onKillFunc, string onBeKillFunc)
+    {
+        this.id = id;
+        this.priority = priority;
+        this.max_stack = max_stack;
+        this.is_permanent = isPermanent;
+        this.duration_turn = durationTurn;
+
+        //TODO:根据string加载脚本
+        this.onGet = null;
+        this.onRemove = null;
+        this.onTurnStart = null;
+        this.onTurnEnd = null;
+        this.onHit = null;
+        this.onBeHurt = null;
+        this.onKill = null;
+        this.onBeKill = null;
+}
+
     public string id;
     public int priority;
     public int max_stack;

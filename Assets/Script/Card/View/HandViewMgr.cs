@@ -9,19 +9,18 @@ using UnityEngine.Splines;
 /// <summary>
 /// HandView管理手牌的位置,直接管理CardObj
 /// </summary>
-public class HandViewMgr : Singleton<HandViewMgr>
+public class HandViewMgr : MonoSingleton<HandViewMgr>
 {
     private SplineContainer m_Spline;
     private Transform m_DiscardTrans;
     private Transform m_DrawPipleTrans;
 
     private float m_MinCardSpace = 0.05f;
-    private float m_MaxCardSpace = 0.2f;
+    private float m_MaxCardSpace = 0.15f;
 
     private float duration = 0.15f;
     private Vector3 m_FatherOffset;
     private List<CardView> m_HandCards = new List<CardView>();
-    private CardViewFactory m_CardViewFactory = new CardViewFactory();
 
     public int HandCardCount
     {
@@ -31,8 +30,10 @@ public class HandViewMgr : Singleton<HandViewMgr>
         }
     }
 
-    public HandViewMgr()
+    protected override void Awake()
     {
+        base.Awake();
+
         m_DiscardTrans = GameObject.Find("DiscardPoint").transform;
         m_DrawPipleTrans = GameObject.Find("DrawPiplePoint").transform;
 
@@ -40,8 +41,23 @@ public class HandViewMgr : Singleton<HandViewMgr>
         m_Spline = splieTrans.GetComponent<SplineContainer>();
         m_FatherOffset = splieTrans.localPosition;
 
-        CardMgr.Instance.onDrawCard += AddCard;
+        //监听数据层
+        CardMgr.Instance.onDrawCard += DrawCard;
         CardMgr.Instance.onDiscardCard += RemoveCard;
+    }
+
+    private void DrawCard(List<GameObject> cardObjs)
+    {
+        StartCoroutine(StartDrawCard(cardObjs));
+    }
+
+    private IEnumerator StartDrawCard(List<GameObject> cardObjs)
+    {
+        foreach(var obj in cardObjs)
+        {
+            AddCard(obj);
+            yield return new WaitForSeconds(0.15f);
+        }
     }
 
     /// <summary>
@@ -50,7 +66,9 @@ public class HandViewMgr : Singleton<HandViewMgr>
     /// <param name="cardView"></param>
     private void AddCard(GameObject cardObj)
     {
-        CardView cardView = m_CardViewFactory.CreateCardView(cardObj);      //创建CardView
+        //激活GameObjec的View层
+        CardView cardView = cardObj.GetComponentInChildren<CardView>(true);
+        cardView.gameObject.SetActive(true);
 
         m_HandCards.Add(cardView);
 
@@ -86,7 +104,7 @@ public class HandViewMgr : Singleton<HandViewMgr>
         obj.transform.DOMove(m_DiscardTrans.position, duration);
         obj.transform.DOScale(0.0f, duration).OnComplete(() =>
         {
-            GameObject.Destroy(obj);
+            obj.SetActive(false);
         });
         UpdateCardPosition();
     }

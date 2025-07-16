@@ -27,7 +27,19 @@ public class CardView : MonoBehaviour
         m_SortGroup = GetComponent<SortingGroup>();
     }
 
-    public void Init(string cardName, Sprite cardBK, GameObject cardObj)
+    /// <summary>
+    /// 根据Card数据更新View
+    /// </summary>
+    /// <param name="cardObj"></param>
+    public void UpdateView(GameObject cardObj = null)
+    {
+        if (cardObj != null)
+            this.cardObj = cardObj;
+        CardModel model = this.cardObj.GetComponent<CardModelComponent>().cardModel;
+        UpdateView(model.card_name, model.card_tex, cardObj);     //设置cardView的名字和图片
+    }
+
+    private void UpdateView(string cardName, Sprite cardBK, GameObject cardObj)
     {
         m_CardNameText.text = cardName;
         m_CardBKSprite.sprite = cardBK;

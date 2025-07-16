@@ -9,6 +9,7 @@ namespace LC
     {
         public Action onSpaceAction;
         public Action onQuitAction;
+        public Action onExit;
         private CardInputAction m_InputAction;
         public InputMgr()
         {
@@ -24,6 +25,12 @@ namespace LC
         {
             if (onQuitAction != null && context.performed)
                 onQuitAction.Invoke();
+        }
+
+        public void OnExit(InputAction.CallbackContext context)
+        {
+            if(onExit != null && context.performed)
+                onExit.Invoke();
         }
 
         public void OnTest(InputAction.CallbackContext context)
