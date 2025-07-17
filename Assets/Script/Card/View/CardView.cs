@@ -14,7 +14,14 @@ public class CardView : MonoBehaviour
     [SerializeField] private TextMeshPro m_CardLevelText;
     [SerializeField] private float m_AnimDuration;
 
+    private float m_HorveredScale = 1.2f;
+
+
     public GameObject cardObj;
+
+    public bool IsHorvered { get; private set; }
+    public bool IsSelected { get; private set; }
+    public bool IsCanInteract { get; private set; } = true;
 
     private Vector3 m_OriginalPos;
     private Quaternion m_OriginalQuat;
@@ -25,6 +32,13 @@ public class CardView : MonoBehaviour
     private void Awake()
     {
         m_SortGroup = GetComponent<SortingGroup>();
+    }
+
+    private void OnEnable()     //用于刷新卡牌view的状态
+    {
+        IsCanInteract = true;
+        IsSelected = false;
+        IsHorvered = false;
     }
 
     /// <summary>
@@ -52,27 +66,62 @@ public class CardView : MonoBehaviour
         m_OriginalQuat = quat;
         m_SortIndex = sortIndex;
         m_SortGroup.sortingOrder = sortIndex;
+
+        if (IsSelected || !IsCanInteract)
+            return;
+
         transform.DOMove(pos, m_AnimDuration);
         transform.DORotateQuaternion(quat, m_AnimDuration);
     }
 
     public void OnHorvered()
     {
+        if (IsHorvered || !IsCanInteract) return;
+        IsHorvered = true;
         Vector3 pos = m_OriginalPos;
         pos.y = -2.0f;
         Quaternion rot = Quaternion.LookRotation(Vector3.forward, Vector3.up);
 
         transform.DOMove(pos, m_AnimDuration);
         transform.DORotateQuaternion(rot, m_AnimDuration);
-        transform.DOScale(1.2f, m_AnimDuration);
+        transform.DOScale(m_HorveredScale, m_AnimDuration);
         m_SortGroup.sortingOrder = HandViewMgr.Instance.HandCardCount;
     }
 
     public void OnUnHorvered()
     {
+        if (!IsHorvered || !IsCanInteract) return;
+        IsHorvered = false;
         transform.DOMove(m_OriginalPos, m_AnimDuration);
         transform.DORotateQuaternion(m_OriginalQuat, m_AnimDuration);
         transform.DOScale(1.0f, m_AnimDuration);
         m_SortGroup.sortingOrder = m_SortIndex;
+    }
+
+    public void OnSelected()
+    {
+        if (IsSelected) return;
+        IsSelected = true;
+        Sequence bounceSequence = DOTween.Sequence();
+        bounceSequence.Append(transform.DOScale(m_HorveredScale * 0.8f, 0.1f));
+        bounceSequence.Append(transform.DOScale(m_HorveredScale, 0.1f)
+            .SetEase(Ease.OutElastic, 1, 0.1f));
+
+        // 播放序列
+        bounceSequence.Play();
+    }
+
+    public void OnUnSelected()
+    {
+        if (!IsSelected) return;
+        IsSelected = false;
+    }
+
+    /// <summary>
+    /// 释放卡牌
+    /// </summary>
+    public void Caste()
+    {
+        IsCanInteract = false;
     }
 }

@@ -1564,6 +1564,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b4e7a2f7d6b85be459394ac6bc890e28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_Spline: {fileID: 167362403}
+  m_DiscardTrans: {fileID: 48398963}
+  m_DrawPipleTrans: {fileID: 1160446974}
+  m_CardLayerMask:
+    serializedVersion: 2
+    m_Bits: 128
+  m_RealeaseCardZone: {fileID: 2043024596}
 --- !u!1 &1689622368
 GameObject:
   m_ObjectHideFlags: 0
@@ -1673,10 +1680,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92607df99c9bd7f47b58cf7c8e589086, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_CardLayerMask:
-    serializedVersion: 2
-    m_Bits: 128
-  m_RealeaseCardZone: {fileID: 2043024596}
 --- !u!1 &1761006230
 GameObject:
   m_ObjectHideFlags: 0

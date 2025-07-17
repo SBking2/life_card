@@ -2,19 +2,24 @@ using DG.Tweening;
 using QF;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 using UnityEngine.Splines;
 
 /// <summary>
-/// HandView管理手牌的位置,直接管理CardObj
+/// HandView管理手牌的位置
 /// </summary>
 public class HandViewMgr : MonoSingleton<HandViewMgr>
 {
-    private SplineContainer m_Spline;
-    private Transform m_DiscardTrans;
-    private Transform m_DrawPipleTrans;
+    //需要挂载的组件
+    [SerializeField] private SplineContainer m_Spline;
+    [SerializeField] private Transform m_DiscardTrans;
+    [SerializeField] private Transform m_DrawPipleTrans;
 
+    //卡牌间距的限制
     private float m_MinCardSpace = 0.05f;
     private float m_MaxCardSpace = 0.15f;
 
@@ -22,6 +27,20 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
     private Vector3 m_FatherOffset;
     private List<CardView> m_HandCards = new List<CardView>();
 
+    private bool m_IsDrawing = false;
+    private bool m_IsSelecting = false;
+
+    private CardView m_HorverdCardView;
+    private CardView m_SelectCardView;
+
+    [SerializeField] private LayerMask m_CardLayerMask;
+    [SerializeField] private Collider m_RealeaseCardZone;   //卡牌的释放区域
+
+    private Queue<List<GameObject>> m_DrawCardQueue = new Queue<List<GameObject>>(); 
+
+    /// <summary>
+    /// 能够抽的卡数
+    /// </summary>
     public int HandCardCount
     {
         get
@@ -34,36 +53,130 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
     {
         base.Awake();
 
-        m_DiscardTrans = GameObject.Find("DiscardPoint").transform;
-        m_DrawPipleTrans = GameObject.Find("DrawPiplePoint").transform;
-
-        Transform splieTrans = GameObject.Find("HandView").transform.Find("Spline");
-        m_Spline = splieTrans.GetComponent<SplineContainer>();
-        m_FatherOffset = splieTrans.localPosition;
+        m_FatherOffset = m_Spline.transform.localPosition;
 
         //监听数据层
         CardMgr.Instance.onDrawCard += DrawCard;
         CardMgr.Instance.onDiscardCard += RemoveCard;
     }
 
-    private void DrawCard(List<GameObject> cardObjs)
+    private void Update()
     {
-        StartCoroutine(StartDrawCard(cardObjs));
+        CardInteractHandle();
     }
 
-    private IEnumerator StartDrawCard(List<GameObject> cardObjs)
+    /// <summary>
+    /// 处理卡牌的交互
+    /// </summary>
+    private void CardInteractHandle()
     {
-        foreach(var obj in cardObjs)
+        //检测手牌
+        if (!m_IsSelecting)
         {
-            AddCard(obj);
-            yield return new WaitForSeconds(0.15f);
+            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+            RaycastHit[] hits = Physics.RaycastAll(ray.origin, ray.direction, 100.0f, m_CardLayerMask);
+
+            if (hits.Length > 0)
+            {
+                //根据能见排序
+                RaycastHit topHit = hits.OrderByDescending(hit => hit.transform.GetComponent<SortingGroup>().sortingOrder).First();
+
+                CardView cardView = topHit.collider.gameObject.GetComponent<CardView>();
+                // 处理topHit的对象
+                if ((m_HorverdCardView == null || cardView.IsHorvered == false) && cardView.IsCanInteract)
+                {
+                    m_HorverdCardView?.OnUnHorvered();
+                    m_HorverdCardView = cardView;
+                    m_HorverdCardView.OnHorvered();
+                }
+            }
+            else if (m_HorverdCardView)
+            {
+                m_HorverdCardView.OnUnHorvered();
+                m_HorverdCardView = null;
+            }
+        }
+
+        //鼠标点击,选择卡牌逻辑
+        if (Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            if (!m_IsSelecting && m_HorverdCardView != null)
+            {
+                //进入Select状态
+                m_IsSelecting = true;
+                m_SelectCardView = m_HorverdCardView;
+                m_SelectCardView.OnSelected();
+                m_HorverdCardView = null;
+            }
+            else if (m_IsSelecting)
+            {
+                //退出Select状态
+                m_IsSelecting = false;
+                m_SelectCardView.OnUnHorvered();
+                m_SelectCardView.OnUnSelected();
+                m_SelectCardView = null;
+            }
+        }
+
+        //保持卡牌与鼠标的同步
+        if (m_IsSelecting)
+        {
+            Vector2 screenPos = Mouse.current.position.ReadValue();
+            Vector3 pos = Camera.main.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, 1.0f));
+            pos.z = m_SelectCardView.transform.position.z;
+            m_SelectCardView.transform.position = Vector3.Lerp(m_SelectCardView.transform.position, pos, 20.0f * Time.deltaTime);
+        }
+
+        //卡牌释放逻辑
+        if (m_IsSelecting && Mouse.current.rightButton.wasPressedThisFrame)
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+            RaycastHit hit;
+            if (m_RealeaseCardZone.Raycast(ray, out hit, 100.0f))
+            {
+                m_SelectCardView.Caste();   //释放卡牌技能
+
+                GameObject discardObj = m_SelectCardView.cardObj;
+                m_SelectCardView.transform.DOMove(Vector3.zero, 1.0f).OnComplete(() =>
+                {
+                    CardMgr.Instance.DiscardCard(discardObj);       //动画播放结束时，从数据层移除手牌
+                });
+                m_IsSelecting = false;
+                m_SelectCardView = null;
+            }
         }
     }
 
     /// <summary>
-    /// 在DrawPiplePoint生成一个CardView，然后Update
+    /// 一次抽多张卡，
     /// </summary>
-    /// <param name="cardView"></param>
+    /// <param name="cardObjs"></param>
+    private void DrawCard(List<GameObject> cardObjs)
+    {
+        m_DrawCardQueue.Enqueue(cardObjs);
+        if (m_IsDrawing) return;
+        StartCoroutine(StartDrawCard());
+    }
+
+    /// <summary>
+    /// 抽卡动画
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator StartDrawCard()
+    {
+        m_IsDrawing = true;
+        while(m_DrawCardQueue.Count > 0)
+        {
+            List<GameObject> cardObjs = m_DrawCardQueue.Dequeue();
+            foreach (var obj in cardObjs)
+            {
+                AddCard(obj);
+                yield return new WaitForSeconds(0.15f);
+            }
+        }
+        m_IsDrawing = false;
+    }
+
     private void AddCard(GameObject cardObj)
     {
         //激活GameObjec的View层
@@ -79,10 +192,6 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
         UpdateCardPosition();
     }
 
-    /// <summary>
-    /// 把CardView移除，并移动到DiscardPoint
-    /// </summary>
-    /// <param name="cardView"></param>
     private void RemoveCard(GameObject cardObj)
     {
         if (m_HandCards.Count < 1) return;
@@ -109,6 +218,9 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
         UpdateCardPosition();
     }
     
+    /// <summary>
+    /// 把手牌重新紧凑
+    /// </summary>
     private void UpdateCardPosition()
     {
         if (m_HandCards.Count == 0) return;
