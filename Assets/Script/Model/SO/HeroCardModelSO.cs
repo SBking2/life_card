@@ -1,9 +1,9 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "SO/Model/Card", fileName = "Card Model SO")]
-public class CardModelSO : ScriptableObject
+[CreateAssetMenu(menuName = "SO/Model/HeroCard", fileName = "Hero Card Model SO")]
+public class HeroCardModelSO : ScriptableObject
 {
     public string id;
     public string card_name;

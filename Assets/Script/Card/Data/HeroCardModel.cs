@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public struct CardModel
+public struct HeroCardModel
 {
-    public CardModel(string id, string name, Sprite tex, int hp, int attack, int defense)
+    public HeroCardModel(string id, string name, Sprite tex, int hp, int attack, int defense)
     {
         this.id = id;
         this.card_name = name;

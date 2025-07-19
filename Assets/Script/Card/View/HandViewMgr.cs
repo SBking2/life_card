@@ -18,6 +18,7 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
     [SerializeField] private SplineContainer m_Spline;
     [SerializeField] private Transform m_DiscardTrans;
     [SerializeField] private Transform m_DrawPipleTrans;
+    [SerializeField] private GameObject m_CasterTest;
 
     //卡牌间距的限制
     private float m_MinCardSpace = 0.05f;
@@ -25,19 +26,19 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
 
     private float duration = 0.15f;
     private Vector3 m_FatherOffset;
-    private List<CardView> m_HandCards = new List<CardView>();
+    private List<BaseCardView> m_HandCards = new List<BaseCardView>();
 
     private bool m_IsDrawing = false;
     private bool m_IsSelecting = false;
 
-    private CardView m_HorverdCardView;
-    private CardView m_SelectCardView;
+    private BaseCardView m_HorverdCardView;
+    private BaseCardView m_SelectCardView;
 
     [SerializeField] private LayerMask m_CardLayerMask;
     [SerializeField] private Collider m_RealeaseCardZone;   //卡牌的释放区域
 
     private bool m_IsCasting = false;
-    private Queue<CardView> m_CasteQueue = new Queue<CardView>();
+    private Queue<BaseCardView> m_CasteQueue = new Queue<BaseCardView>();
     private Queue<List<GameObject>> m_DrawCardQueue = new Queue<List<GameObject>>(); 
 
     /// <summary>
@@ -83,18 +84,18 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
                 //根据能见排序
                 RaycastHit topHit = hits.OrderByDescending(hit => hit.transform.GetComponent<SortingGroup>().sortingOrder).First();
 
-                CardView cardView = topHit.collider.gameObject.GetComponent<CardView>();
+                BaseCardView cardView = topHit.collider.gameObject.GetComponent<BaseCardView>();
                 // 处理topHit的对象
-                if (cardView.CurrentState == CardView.CardState.None)       //None状态的卡牌才能进入被Hover
+                if (cardView.CurrentState == BaseCardView.CardState.None)       //None状态的卡牌才能进入被Hover
                 {
-                    m_HorverdCardView?.EnterState(CardView.CardState.None, true);
+                    m_HorverdCardView?.EnterState(BaseCardView.CardState.None, true);
                     m_HorverdCardView = cardView;
-                    m_HorverdCardView.EnterState(CardView.CardState.Horvered);
+                    m_HorverdCardView.EnterState(BaseCardView.CardState.Horvered);
                 }
             }
             else if (m_HorverdCardView)
             {
-                m_HorverdCardView.EnterState(CardView.CardState.None, true);
+                m_HorverdCardView.EnterState(BaseCardView.CardState.None, true);
                 m_HorverdCardView = null;
             }
         }
@@ -107,14 +108,14 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
                 //进入Select状态
                 m_IsSelecting = true;
                 m_SelectCardView = m_HorverdCardView;
-                m_SelectCardView.EnterState(CardView.CardState.Selected);
+                m_SelectCardView.EnterState(BaseCardView.CardState.Selected);
                 m_HorverdCardView = null;
             }
             else if (m_IsSelecting)
             {
                 //退出Select状态
                 m_IsSelecting = false;
-                m_SelectCardView.EnterState(CardView.CardState.None, true);
+                m_SelectCardView.EnterState(BaseCardView.CardState.None, true);
                 m_SelectCardView = null;
             }
         }
@@ -135,7 +136,7 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
             RaycastHit hit;
             if (m_RealeaseCardZone.Raycast(ray, out hit, 100.0f))
             {
-                m_SelectCardView.EnterState(CardView.CardState.Caste);
+                m_SelectCardView.EnterState(BaseCardView.CardState.Caste);
                 CasteCard(m_SelectCardView);
                 m_IsSelecting = false;
                 m_SelectCardView = null;
@@ -143,7 +144,7 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
         }
     }
 
-    private void CasteCard(CardView cardView)
+    private void CasteCard(BaseCardView cardView)
     {
         m_CasteQueue.Enqueue(cardView);
         if (m_IsCasting) return;
@@ -156,8 +157,9 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
         m_IsCasting = true;
         while(m_CasteQueue.Count > 0)
         {
-            CardView cardView = m_CasteQueue.Dequeue();
+            BaseCardView cardView = m_CasteQueue.Dequeue();
             GameObject data = cardView.cardObj;
+            cardView.Caste(m_CasterTest);       //触发卡牌的Timeline
             Tween twe = cardView.transform.DOMove(Vector3.zero, 1.0f).OnComplete(() =>
             {
                 CardMgr.Instance.DiscardCard(data);       //动画播放结束时，从数据层移除手牌
@@ -201,7 +203,7 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
     private void AddCard(GameObject cardObj)
     {
         //激活GameObjec的View层
-        CardView cardView = cardObj.GetComponentInChildren<CardView>(true);
+        BaseCardView cardView = cardObj.GetComponentInChildren<BaseCardView>(true);
 
         cardView.gameObject.SetActive(true);
         m_HandCards.Add(cardView);
@@ -219,7 +221,7 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
         if (m_HandCards.Count < 1) return;
 
         GameObject obj = null;
-        CardView cardView = null;
+        BaseCardView cardView = null;
         foreach(var view in m_HandCards)
         {
             if (view.cardObj == cardObj)

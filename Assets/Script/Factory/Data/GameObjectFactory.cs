@@ -36,9 +36,39 @@ public class CardObjFactory : ICreateObject
         GameObject obj = GameObject.Instantiate(cardObjRes, m_ObjFather, false);    //实例化Obj，并放到Obj数据的父节点下
 
         //获取model，赋值给实例化的obj
-        CardModelComponent modelComponent= obj.GetComponent<CardModelComponent>();
-        CardModel model = CardModelContainer.Instance.GetModelData(id);
-        modelComponent.cardModel = model;   //拷贝赋值
+        SkillCardModelComponent modelComponent= obj.GetComponent<SkillCardModelComponent>();
+        SkillCardModel model = SkillCardModelContainer.Instance.GetModelData(id);
+        modelComponent.model = model;   //拷贝赋值
+
+        //更新CardView
+        BaseCardView cardView = obj.GetComponentInChildren<BaseCardView>(true);
+        cardView.UpdateView(obj);
+
+        return obj;
+    }
+}
+
+public class HeroCardObjFactory : ICreateObject
+{
+    private Transform m_ObjFather;
+
+    public HeroCardObjFactory()
+    {
+    }
+
+    public GameObject CreateObj(string id)
+    {
+        GameObject cardObjRes = ResMgr.Instance.Load<GameObject>("Prefabs/Card/Obj/HeroCardObj");   //从磁盘中读取Prefabs的数据
+
+        if (m_ObjFather == null)
+            m_ObjFather = GameObject.Find("CardObj").transform;
+
+        GameObject obj = GameObject.Instantiate(cardObjRes, m_ObjFather, false);    //实例化Obj，并放到Obj数据的父节点下
+
+        //获取model，赋值给实例化的obj
+        HeroCardModelComponent modelComponent = obj.GetComponent<HeroCardModelComponent>();
+        HeroCardModel model = HeroCardModelContainer.Instance.GetModelData(id);
+        modelComponent.model = model;   //拷贝赋值
 
         //设置Card的UnitState
         UnitProperty property = new UnitProperty(model.max_hp, model.attack, model.defense);
@@ -48,7 +78,7 @@ public class CardObjFactory : ICreateObject
         state.Init(property, resource);
 
         //更新CardView
-        CardView cardView = obj.GetComponentInChildren<CardView>(true);
+        BaseCardView cardView = obj.GetComponentInChildren<HeroCardView>(true);
         cardView.UpdateView(obj);
 
         return obj;

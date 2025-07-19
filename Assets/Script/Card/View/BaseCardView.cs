@@ -5,8 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-
-public class CardView : MonoBehaviour
+public abstract class BaseCardView : MonoBehaviour
 {
     public enum CardState
     {
@@ -16,30 +15,29 @@ public class CardView : MonoBehaviour
         Caste = 3
     }
 
-    [SerializeField] private SpriteRenderer m_CardBKSprite;
-    [SerializeField] private TextMeshPro m_CardNameText;
-    [SerializeField] private TextMeshPro m_CardContentText;
-    [SerializeField] private TextMeshPro m_CardLevelText;
+    [SerializeField] protected SpriteRenderer m_CardBKSprite;
+    [SerializeField] protected TextMeshPro m_CardNameText;
+    [SerializeField] protected TextMeshPro m_CardLevelText;
 
-    private float m_AnimDuration = 0.15f;
-    private float m_HorveredScale = 1.2f;
+    protected float m_AnimDuration = 0.15f;
+    protected float m_HorveredScale = 1.2f;
 
     [HideInInspector] public GameObject cardObj;
-    public CardState CurrentState { get; private set; }
+    public CardState CurrentState { get; protected set; }
 
     //卡牌在手牌序列中应该存在的属性
-    private Vector3 m_OriginalPos;      
-    private Quaternion m_OriginalQuat;
-    private int m_SortIndex;
+    protected Vector3 m_OriginalPos;
+    protected Quaternion m_OriginalQuat;
+    protected int m_SortIndex;
 
-    private SortingGroup m_SortGroup;
+    protected SortingGroup m_SortGroup;
 
-    private void Awake()
+    protected void Awake()
     {
         m_SortGroup = GetComponent<SortingGroup>();
     }
 
-    private void OnEnable()     //用于刷新卡牌view的状态
+    protected void OnEnable()     //用于刷新卡牌view的状态
     {
         EnterState(CardState.None, true);
     }
@@ -48,17 +46,7 @@ public class CardView : MonoBehaviour
     /// 根据Card数据更新View
     /// </summary>
     /// <param name="cardObj"></param>
-    public void UpdateView(GameObject cardObj = null)
-    {
-        if (cardObj != null)
-            this.cardObj = cardObj;
-        CardModel model = this.cardObj.GetComponent<CardModelComponent>().cardModel;
-
-        //设置cardView的名字和图片
-        m_CardNameText.text = model.card_name;
-        m_CardBKSprite.sprite = model.card_tex;
-        this.cardObj = cardObj;
-    }
+    public abstract void UpdateView(GameObject cardObj = null);
 
     /// <summary>
     /// 仅仅设置Card如果在手牌中，应该在哪个位置
@@ -87,7 +75,7 @@ public class CardView : MonoBehaviour
         if (!isForce && CurrentState != CardState.None && state == CardState.None) return;
 
         CurrentState = state;
-        switch(state)
+        switch (state)
         {
             case CardState.None:
                 OnNone();
@@ -104,7 +92,7 @@ public class CardView : MonoBehaviour
         }
     }
 
-    private void OnNone()
+    protected void OnNone()
     {
         transform.DOMove(m_OriginalPos, m_AnimDuration);
         transform.DORotateQuaternion(m_OriginalQuat, m_AnimDuration);
@@ -112,7 +100,7 @@ public class CardView : MonoBehaviour
         m_SortGroup.sortingOrder = m_SortIndex;
     }
 
-    private void OnHorvered()
+    protected void OnHorvered()
     {
         Vector3 pos = m_OriginalPos;
         pos.y = -2.0f;
@@ -124,7 +112,7 @@ public class CardView : MonoBehaviour
         m_SortGroup.sortingOrder = HandViewMgr.Instance.HandCardCount;
     }
 
-    private void OnSelected()
+    protected void OnSelected()
     {
         Sequence bounceSequence = DOTween.Sequence();
         bounceSequence.Append(transform.DOScale(m_HorveredScale * 0.8f, 0.1f));
@@ -135,8 +123,16 @@ public class CardView : MonoBehaviour
         bounceSequence.Play();
     }
 
-    private void OnCaste()
+    protected void OnCaste()
     {
 
+    }
+
+    /// <summary>
+    /// 释放卡牌
+    /// </summary>
+    public void Caste(GameObject caster)
+    {
+        TimelineMgr.Instance.AddTimeline(cardObj.GetComponent<SkillCardModelComponent>().model.timelineModel, caster);
     }
 }

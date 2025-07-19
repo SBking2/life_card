@@ -9,13 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5fcd9a862b7b4e44db9c15801e698160, type: 3}
-  m_Name: Card Model SO
+  m_Script: {fileID: 11500000, guid: 59853e231b6afbf479752f5c23927ebb, type: 3}
+  m_Name: Red
   m_EditorClassIdentifier: 
-  id: 1001
-  card_name: Attack
-  card_tex: xy
-  max_hp: 0
-  attack: 0
-  defense: 0
-  timeline_name: attack
+  id: 1101
+  card_name: Red
+  card_tex: amy
+  max_hp: 80
+  attack: 10
+  defense: 10

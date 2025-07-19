@@ -28,7 +28,8 @@ public class CardMgr : MonoSingleton<CardMgr>
         }
     }
 
-    private GameObjectFactory m_ObjFactory = new GameObjectFactory(new CardObjFactory());
+    private GameObjectFactory m_CardObjFactory = new GameObjectFactory(new CardObjFactory());
+    private GameObjectFactory m_HeroCardObjFactory = new GameObjectFactory(new HeroCardObjFactory());
 
     protected override void Awake()
     {
@@ -36,8 +37,13 @@ public class CardMgr : MonoSingleton<CardMgr>
         //根据初始化Card的数据，生成CardObj
         foreach(var id in m_InitCards)
         {
-            GameObject CardObj = m_ObjFactory.CreateObject(id);
-            m_DrawPipleCards.Add(CardObj);
+            GameObject obj;
+            if (id[1] == '0')
+                obj = m_CardObjFactory.CreateObject(id);
+            else
+                obj = m_HeroCardObjFactory.CreateObject(id);
+
+            m_DrawPipleCards.Add(obj);
         }
     }
 
