@@ -36,6 +36,8 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
     [SerializeField] private LayerMask m_CardLayerMask;
     [SerializeField] private Collider m_RealeaseCardZone;   //卡牌的释放区域
 
+    private bool m_IsCasting = false;
+    private Queue<CardView> m_CasteQueue = new Queue<CardView>();
     private Queue<List<GameObject>> m_DrawCardQueue = new Queue<List<GameObject>>(); 
 
     /// <summary>
@@ -83,16 +85,16 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
 
                 CardView cardView = topHit.collider.gameObject.GetComponent<CardView>();
                 // 处理topHit的对象
-                if ((m_HorverdCardView == null || cardView.IsHorvered == false) && cardView.IsCanInteract)
+                if (cardView.CurrentState == CardView.CardState.None)       //None状态的卡牌才能进入被Hover
                 {
-                    m_HorverdCardView?.OnUnHorvered();
+                    m_HorverdCardView?.EnterState(CardView.CardState.None, true);
                     m_HorverdCardView = cardView;
-                    m_HorverdCardView.OnHorvered();
+                    m_HorverdCardView.EnterState(CardView.CardState.Horvered);
                 }
             }
             else if (m_HorverdCardView)
             {
-                m_HorverdCardView.OnUnHorvered();
+                m_HorverdCardView.EnterState(CardView.CardState.None, true);
                 m_HorverdCardView = null;
             }
         }
@@ -105,15 +107,14 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
                 //进入Select状态
                 m_IsSelecting = true;
                 m_SelectCardView = m_HorverdCardView;
-                m_SelectCardView.OnSelected();
+                m_SelectCardView.EnterState(CardView.CardState.Selected);
                 m_HorverdCardView = null;
             }
             else if (m_IsSelecting)
             {
                 //退出Select状态
                 m_IsSelecting = false;
-                m_SelectCardView.OnUnHorvered();
-                m_SelectCardView.OnUnSelected();
+                m_SelectCardView.EnterState(CardView.CardState.None, true);
                 m_SelectCardView = null;
             }
         }
@@ -134,17 +135,37 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
             RaycastHit hit;
             if (m_RealeaseCardZone.Raycast(ray, out hit, 100.0f))
             {
-                m_SelectCardView.Caste();   //释放卡牌技能
-
-                GameObject discardObj = m_SelectCardView.cardObj;
-                m_SelectCardView.transform.DOMove(Vector3.zero, 1.0f).OnComplete(() =>
-                {
-                    CardMgr.Instance.DiscardCard(discardObj);       //动画播放结束时，从数据层移除手牌
-                });
+                m_SelectCardView.EnterState(CardView.CardState.Caste);
+                CasteCard(m_SelectCardView);
                 m_IsSelecting = false;
                 m_SelectCardView = null;
             }
         }
+    }
+
+    private void CasteCard(CardView cardView)
+    {
+        m_CasteQueue.Enqueue(cardView);
+        if (m_IsCasting) return;
+        else
+            StartCoroutine(StartCasteQueue());
+    }
+
+    private IEnumerator StartCasteQueue()
+    {
+        m_IsCasting = true;
+        while(m_CasteQueue.Count > 0)
+        {
+            CardView cardView = m_CasteQueue.Dequeue();
+            GameObject data = cardView.cardObj;
+            Tween twe = cardView.transform.DOMove(Vector3.zero, 1.0f).OnComplete(() =>
+            {
+                CardMgr.Instance.DiscardCard(data);       //动画播放结束时，从数据层移除手牌
+            });
+
+            yield return twe.WaitForCompletion();
+        }
+        m_IsCasting = false;
     }
 
     /// <summary>
@@ -181,12 +202,13 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
     {
         //激活GameObjec的View层
         CardView cardView = cardObj.GetComponentInChildren<CardView>(true);
+
         cardView.gameObject.SetActive(true);
-
         m_HandCards.Add(cardView);
-
         cardView.transform.position = m_DrawPipleTrans.position;
         cardView.transform.localScale = Vector3.zero;
+
+        //为CardView添加动画
         cardView.transform.DOScale(1.0f, duration);
 
         UpdateCardPosition();
@@ -209,9 +231,10 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
 
         if(obj == null) return;
 
+
         m_HandCards.Remove(cardView);   //从手牌中移除这个cardview
-        obj.transform.DOMove(m_DiscardTrans.position, duration);
-        obj.transform.DOScale(0.0f, duration).OnComplete(() =>
+        cardView.transform.DOMove(m_DiscardTrans.position, duration);
+        cardView.transform.DOScale(0.0f, duration).OnComplete(() =>
         {
             obj.SetActive(false);
         });
