@@ -18,6 +18,7 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
     [SerializeField] private SplineContainer m_Spline;
     [SerializeField] private Transform m_DiscardTrans;
     [SerializeField] private Transform m_DrawPipleTrans;
+    [SerializeField] private GameObject m_CasterTest;
 
     //卡牌间距的限制
     private float m_MinCardSpace = 0.05f;
@@ -158,6 +159,7 @@ public class HandViewMgr : MonoSingleton<HandViewMgr>
         {
             CardView cardView = m_CasteQueue.Dequeue();
             GameObject data = cardView.cardObj;
+            cardView.Caste(m_CasterTest);       //触发卡牌的Timeline
             Tween twe = cardView.transform.DOMove(Vector3.zero, 1.0f).OnComplete(() =>
             {
                 CardMgr.Instance.DiscardCard(data);       //动画播放结束时，从数据层移除手牌

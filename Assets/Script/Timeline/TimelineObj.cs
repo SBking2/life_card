@@ -1,7 +1,7 @@
 ﻿
 using UnityEngine;
 
-public struct TimelineObj
+public class TimelineObj
 {
     public TimelineModel model;
     public GameObject caster;   //施法者

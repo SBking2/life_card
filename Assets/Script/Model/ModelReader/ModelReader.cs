@@ -35,7 +35,7 @@ public class SOModelReader : IModelReader
         foreach(var so in modelSO)
         {
             Sprite tex = ResMgr.Instance.Load<Sprite>(m_TexPath + so.card_tex);
-            CardModel model = new CardModel(so.id, so.card_name, tex, so.max_hp, so.attack, so.defense);
+            CardModel model = new CardModel(so.id, so.card_name, tex, so.max_hp, so.attack, so.defense, so.timeline_name);
             dic.Add(model.id, model);
         }
 

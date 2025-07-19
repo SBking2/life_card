@@ -8,7 +8,7 @@ public struct TimelineNode
     {
         this.timeElapsed = timeElapsed;
         this.event_args = args;
-        this.onEventOccur = null;    //TODO:从脚本字典里面找到函数并赋值
+        this.onEventOccur = TimelineScript.Instance.GetTimelineEvent(funcName);    //TODO:从脚本字典里面找到函数并赋值
     }
     public float timeElapsed;
     public object[] event_args;

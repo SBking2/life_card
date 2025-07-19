@@ -12,4 +12,6 @@ public class CardModelSO : ScriptableObject
     public int max_hp;
     public int attack;
     public int defense;
+
+    public string timeline_name;
 }

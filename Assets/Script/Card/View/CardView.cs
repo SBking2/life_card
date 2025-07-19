@@ -139,4 +139,12 @@ public class CardView : MonoBehaviour
     {
 
     }
+
+    /// <summary>
+    ///  Õ∑≈ø®≈∆
+    /// </summary>
+    public void Caste(GameObject caster)
+    {
+        TimelineMgr.Instance.AddTimeline(cardObj.GetComponent<CardModelComponent>().cardModel.timelineModel, caster);
+    }
 }
