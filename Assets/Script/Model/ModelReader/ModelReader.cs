@@ -1,9 +1,14 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public interface IModelReader
+public interface ISkillCardModelReader
 {
-    public Dictionary<string, CardModel> Read();
+    public Dictionary<string, SkillCardModel> Read();
+}
+
+public interface IHeroCardModelReader
+{
+    public Dictionary<string, HeroCardModel> Read();
 }
 
 /// <summary>
@@ -11,31 +16,53 @@ public interface IModelReader
 /// </summary>
 public class ModelReader
 {
-    public ModelReader(IModelReader modelReader)
+    public ModelReader(ISkillCardModelReader skillCardModelReader, IHeroCardModelReader heroCardModelReader)
     {
-        m_ModelReader = modelReader;
+        m_SkillCardModelReader = skillCardModelReader;
+        m_HeroCardModelReader = heroCardModelReader;
     }
 
-    private IModelReader m_ModelReader;
+    private ISkillCardModelReader m_SkillCardModelReader;
+    private IHeroCardModelReader m_HeroCardModelReader;
 
-    public Dictionary<string, CardModel> Read() { return m_ModelReader.Read(); }
+    public Dictionary<string, SkillCardModel> ReadCardModel() { return m_SkillCardModelReader.Read(); }
+    public Dictionary<string, HeroCardModel> ReadHeroCardModel() { return m_HeroCardModelReader.Read(); }
 }
 
 /// <summary>
 /// 从SO中读取数据
 /// </summary>
-public class SOModelReader : IModelReader
+public class SOCardModelReader : ISkillCardModelReader
 {
     private const string m_TexPath = "Tex/Card/";
 
-    public Dictionary<string, CardModel> Read()
+    public Dictionary<string, SkillCardModel> Read()
     {
-        Dictionary<string, CardModel> dic = new Dictionary<string, CardModel>();
-        CardModelSO[] modelSO = Resources.LoadAll<CardModelSO>("Model/Card");
+        Dictionary<string, SkillCardModel> dic = new Dictionary<string, SkillCardModel>();
+        SkillCardModelSO[] modelSO = Resources.LoadAll<SkillCardModelSO>("Model/Card");
         foreach(var so in modelSO)
         {
             Sprite tex = ResMgr.Instance.Load<Sprite>(m_TexPath + so.card_tex);
-            CardModel model = new CardModel(so.id, so.card_name, tex, so.max_hp, so.attack, so.defense, so.timeline_name);
+            SkillCardModel model = new SkillCardModel(so.id, so.card_name, tex, so.timeline_name);
+            dic.Add(model.id, model);
+        }
+
+        return dic;
+    }
+}
+
+public class SOHeroCardModelReader : IHeroCardModelReader
+{
+    private const string m_TexPath = "Tex/Card/";
+
+    public Dictionary<string, HeroCardModel> Read()
+    {
+        Dictionary<string, HeroCardModel> dic = new Dictionary<string, HeroCardModel>();
+        HeroCardModelSO[] modelSO = Resources.LoadAll<HeroCardModelSO>("Model/HeroCard");
+        foreach (var so in modelSO)
+        {
+            Sprite tex = ResMgr.Instance.Load<Sprite>(m_TexPath + so.card_tex);
+            HeroCardModel model = new HeroCardModel(so.id, so.card_name, tex, so.max_hp, so.attack, so.defense);
             dic.Add(model.id, model);
         }
 
@@ -46,9 +73,9 @@ public class SOModelReader : IModelReader
 /// <summary>
 /// 从Excel中读取数据
 /// </summary>
-public class ExcelModelReader : IModelReader
+public class ExcelCardModelReader : ISkillCardModelReader
 {
-    public Dictionary<string, CardModel> Read()
+    public Dictionary<string, SkillCardModel> Read()
     {
         throw new System.NotImplementedException();
     }

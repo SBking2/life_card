@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CardModelComponent : MonoBehaviour
+public class HeroCardModelComponent : MonoBehaviour
 {
-    public CardModel cardModel;
+    public HeroCardModel model;
 }

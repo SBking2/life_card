@@ -13,7 +13,7 @@ public class CardItemUIFactory
         GameObject obj = GameObject.Instantiate(m_CardItemUIPrefabs);
         CardSlotUI cardui = obj.GetComponent<CardSlotUI>();
 
-        CardModel model = cardObj.GetComponent<CardModelComponent>().cardModel;
+        SkillCardModel model = cardObj.GetComponent<SkillCardModelComponent>().model;
         cardui.Init(model.card_name, model.card_tex, cardObj);     //设置cardView的名字和图片
 
         if(callback != null )
